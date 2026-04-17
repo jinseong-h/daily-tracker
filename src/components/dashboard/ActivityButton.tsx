@@ -29,14 +29,14 @@ export function ActivityButton({ tag, category, color, isRunning, startTime, war
       }}
     >
       {!isRunning && warnings.length > 0 && (
-        <div className="absolute top-0 right-0 flex flex-col items-end gap-[1px] overflow-hidden rounded-bl-xl rounded-tr-2xl">
+        <div className="absolute -top-[2px] -right-[2px] flex flex-col items-end gap-[1px] overflow-hidden rounded-bl-xl rounded-tr-2xl">
           {warnings.includes('average') && (
-            <div className="bg-red-500 text-white font-black text-[10px] px-2.5 py-1 shadow-sm leading-none tracking-tight animate-pulse" title="일 평균 목표 미달">
+            <div className="bg-red-500 text-white font-black text-xs px-3 py-1.5 shadow-sm leading-none tracking-tight animate-pulse" title="일 평균 목표 미달">
               평균미달
             </div>
           )}
           {warnings.includes('today') && (
-            <div className="bg-orange-100 text-orange-600 font-bold text-[9px] px-2 py-0.5 shadow-sm leading-none tracking-tight" title="오늘 목표 미달">
+            <div className="bg-orange-100 text-orange-600 font-bold text-[11px] px-2.5 py-1 shadow-sm leading-none tracking-tight" title="오늘 목표 미달">
               당일부족
             </div>
           )}

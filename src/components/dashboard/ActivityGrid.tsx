@@ -94,7 +94,7 @@ export function ActivityGrid() {
     runningTimeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   }
 
-  const inactiveTags = tags.filter(t => t.name !== activeActivity?.tag);
+  const displayTags = tags;
 
   return (
     <div className="flex flex-col gap-6 lg:gap-8 h-full">
@@ -141,7 +141,7 @@ export function ActivityGrid() {
         
         <div className="flex flex-col gap-8">
           {categories.map((cat) => {
-            const categoryTags = inactiveTags.filter(t => t.category === cat.name);
+            const categoryTags = displayTags.filter(t => t.category === cat.name);
             if (categoryTags.length === 0) return null;
             return (
               <div key={`cat-group-${cat.name}`}>
@@ -152,13 +152,15 @@ export function ActivityGrid() {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                   {categoryTags.map((tag) => {
+                    const isRunning = activeActivity?.tag === tag.name;
                     return (
                       <ActivityButton
                         key={`${tag.category}-${tag.name}`}
                         tag={tag.name}
                         category={tag.category}
                         color={cat.color}
-                        isRunning={false}
+                        isRunning={isRunning}
+                        startTime={isRunning ? activeActivity.start_time : undefined}
                         warnings={getTagWarnings(tag)}
                         onClick={() => handleButtonClick(tag.name, tag.category, cat.color)}
                       />
