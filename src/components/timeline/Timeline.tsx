@@ -95,7 +95,7 @@ export function Timeline({ date }: { date: string }) {
           {/* Current Time Indicator */}
           {isToday && (
             <div 
-              className="absolute w-full z-50 flex items-center pointer-events-none" 
+              className="absolute w-full z-30 flex items-center pointer-events-none" 
               style={{ top: `${currentMinutes * PIXELS_PER_MINUTE}px` }}
             >
               <div className="w-[60px] shrink-0" />
