@@ -46,6 +46,10 @@ interface AppState {
 
   showFloatingTimer: boolean;
   setShowFloatingTimer: (show: boolean) => void;
+  
+  dayStartOffset: number;
+  setDayStartOffset: (offset: number) => void;
+
   resetTrackingData: () => void;
 }
 
@@ -84,10 +88,12 @@ export const useStore = create<AppState>()(
       targetPeriodSetting: 7,
       statisticsTimeRange: 'week',
       showFloatingTimer: true,
+      dayStartOffset: 0,
 
       setTargetPeriodSetting: (days) => set({ targetPeriodSetting: days }),
       setStatisticsTimeRange: (range) => set({ statisticsTimeRange: range }),
       setShowFloatingTimer: (show) => set({ showFloatingTimer: show }),
+      setDayStartOffset: (offset) => set({ dayStartOffset: offset }),
 
       startActivity: (tag, category, color) => {
         const { activities, stopActivity } = get();

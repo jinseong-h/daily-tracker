@@ -10,26 +10,28 @@ export interface TimelineBlock {
   activity?: Activity;
 }
 
-export function generateTimelineBlocks(activities: Activity[], targetDate: Date = new Date()): TimelineBlock[] {
-  const dayStart = startOfDay(targetDate);
-  const dayEnd = endOfDay(targetDate);
-  const isToday = isSameDay(targetDate, new Date());
-  const limitDate = isToday ? new Date() : dayEnd;
+export function generateTimelineBlocks(activities: Activity[], targetDate: Date = new Date(), dayStartOffset: number = 0): TimelineBlock[] {
+  const customStartOfDay = new Date(startOfDay(targetDate).getTime() + dayStartOffset * 3600000);
+  const customEndOfDay = new Date(customStartOfDay.getTime() + 86400000);
+  const now = new Date();
+  
+  const isLogicalToday = now >= customStartOfDay && now < customEndOfDay;
+  const limitDate = isLogicalToday ? now : customEndOfDay;
   
   const todaysActivities = activities.filter(a => {
     const aStart = new Date(a.start_time);
     const aEnd = a.end_time ? new Date(a.end_time) : limitDate;
-    return aStart < dayEnd && aEnd > dayStart;
+    return aStart < customEndOfDay && aEnd > customStartOfDay;
   });
 
   todaysActivities.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
 
   const blocks: TimelineBlock[] = [];
-  let currentCursor = dayStart;
+  let currentCursor = customStartOfDay;
 
   todaysActivities.forEach(a => {
     const aStart = new Date(a.start_time);
-    const actStart = aStart < dayStart ? dayStart : aStart;
+    const actStart = aStart < customStartOfDay ? customStartOfDay : aStart;
     
     if (currentCursor < actStart) {
       blocks.push({
@@ -42,7 +44,7 @@ export function generateTimelineBlocks(activities: Activity[], targetDate: Date 
     }
 
     const aEnd = a.end_time ? new Date(a.end_time) : limitDate;
-    const actEnd = aEnd > dayEnd ? dayEnd : aEnd;
+    const actEnd = aEnd > customEndOfDay ? customEndOfDay : aEnd;
 
     if (actEnd > actStart) {
       blocks.push({

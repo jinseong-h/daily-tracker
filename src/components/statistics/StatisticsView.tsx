@@ -8,7 +8,7 @@ import { cn } from '../../utils/cn';
 const PIE_COLORS = ['#819A91', '#A7C1A8', '#D1D8BE', '#EEEFE0', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#10b981'];
 
 export function StatisticsView() {
-  const { activities, tags, goals, categories, targetPeriodSetting, statisticsTimeRange } = useStore();
+  const { activities, tags, goals, categories, targetPeriodSetting, statisticsTimeRange, dayStartOffset = 0 } = useStore();
   const [selectedTag, setSelectedTag] = useState<string>(tags[0]?.name || '');
   const [selectedCategory, setSelectedCategory] = useState<string>(categories[0]?.name || '');
   
@@ -250,6 +250,37 @@ export function StatisticsView() {
     return currentGoals;
   }, [activities, goals]);
 
+  const targetWarningReports = useMemo(() => {
+    const periodDays = targetPeriodSetting || 7;
+    const now = new Date();
+    
+    let logicalTodayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), dayStartOffset, 0, 0, 0);
+    if (now < logicalTodayStart) {
+      logicalTodayStart = subDays(logicalTodayStart, 1);
+    }
+    
+    return tags.filter(t => t.daily_target).map(tag => {
+      const todayActs = activities.filter(a => a.tag === tag.name && new Date(a.start_time) >= logicalTodayStart);
+      const todayHours = todayActs.reduce((sum, a) => 
+        sum + Math.max(0, (a.end_time ? new Date(a.end_time).getTime() : now.getTime()) - new Date(a.start_time).getTime())
+      , 0) / 3600000;
+      
+      const isTodayDeficit = todayHours < tag.daily_target!;
+      
+      let totalMs = 0;
+      for (let i = periodDays - 1; i >= 0; i--) {
+        const refDStart = subDays(logicalTodayStart, i);
+        const refDEnd = subDays(logicalTodayStart, i - 1);
+        const dayActs = activities.filter(a => a.tag === tag.name && new Date(a.start_time) >= refDStart && new Date(a.start_time) < refDEnd);
+        totalMs += dayActs.reduce((sum, a) => sum + Math.max(0, (a.end_time ? new Date(a.end_time).getTime() : now.getTime()) - new Date(a.start_time).getTime()), 0);
+      }
+      const avgHours = (totalMs / 3600000) / periodDays;
+      const isAvgDeficit = avgHours < tag.daily_target!;
+      
+      return { tag, todayHours, avgHours, isTodayDeficit, isAvgDeficit, target: tag.daily_target! };
+    }).filter(rep => rep.isTodayDeficit || rep.isAvgDeficit);
+  }, [tags, activities, targetPeriodSetting, dayStartOffset]);
+
   const renderTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       if (payload.length === 1) {
@@ -426,6 +457,37 @@ export function StatisticsView() {
                 })}
               </div>
             </div>
+
+            {targetWarningReports.length > 0 && (
+               <div className="mt-8 border-t border-neutral-100 pt-5">
+                 <h3 className="text-sm font-bold text-darkText mb-3 flex items-center justify-between">
+                   <span>💡 관심 필요 직업 (목표 미달)</span>
+                   <span className="bg-red-100 text-red-500 rounded-full px-2 py-0.5 text-xs font-bold leading-none">{targetWarningReports.length}</span>
+                 </h3>
+                 <div className="flex flex-col gap-3">
+                    {targetWarningReports.map((report) => (
+                      <div key={`warn-${report.tag.name}`} className="bg-white border border-red-100 rounded-xl p-3 shadow-sm relative overflow-hidden group">
+                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-400 group-hover:w-1.5 transition-all" />
+                         <div className="flex justify-between items-center pl-2">
+                           <div>
+                             <span className="text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded font-bold">{report.tag.category}</span>
+                             <h4 className="text-sm font-bold text-darkText mt-1.5 leading-none">{report.tag.name}</h4>
+                             <p className="text-[10px] text-neutral-500 mt-1">목표: 매일 {report.target}h</p>
+                           </div>
+                           <div className="flex flex-col items-end gap-1.5">
+                              {report.isTodayDeficit && (
+                                <span className="text-[10px] font-bold text-red-500 border border-red-200 bg-red-50 px-2 py-0.5 rounded-full">당일 미달 ({report.todayHours.toFixed(1)}h)</span>
+                              )}
+                              {report.isAvgDeficit && (
+                                <span className="text-[10px] font-bold text-red-500 border border-red-200 bg-red-50 px-2 py-0.5 rounded-full">평균 미달 ({report.avgHours.toFixed(1)}h)</span>
+                              )}
+                           </div>
+                         </div>
+                      </div>
+                    ))}
+                 </div>
+               </div>
+            )}
           </div>
         </div>
 

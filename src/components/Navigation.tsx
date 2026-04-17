@@ -9,13 +9,24 @@ export function Navigation({ activeTab, onChange, vertical = false }: { activeTa
     { id: 'settings', icon: Settings, label: '설정' }
   ];
 
+  const handleTabClick = (tabId: string) => {
+    if (tabId === activeTab) {
+      const container = document.getElementById('main-scroll-container');
+      if (container) {
+        container.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } else {
+      onChange(tabId);
+    }
+  };
+
   if (vertical) {
     return (
       <nav className="flex flex-col gap-2 px-4 w-full">
         {tabs.map(tab => (
           <button
             key={`v-${tab.id}`}
-            onClick={() => onChange(tab.id)}
+            onClick={() => handleTabClick(tab.id)}
             className={cn(
               "flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all font-semibold text-sm",
               activeTab === tab.id ? "bg-primary/10 text-primary shadow-sm" : "text-neutral-500 hover:bg-neutral-100 hover:text-darkText"
@@ -35,7 +46,7 @@ export function Navigation({ activeTab, onChange, vertical = false }: { activeTa
         {tabs.map(tab => (
           <button
             key={tab.id}
-            onClick={() => onChange(tab.id)}
+            onClick={() => handleTabClick(tab.id)}
             className={cn(
               "flex flex-col items-center gap-1.5 p-2 rounded-2xl min-w-[72px] transition-all duration-300",
               activeTab === tab.id 

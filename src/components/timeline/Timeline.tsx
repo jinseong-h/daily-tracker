@@ -19,37 +19,40 @@ function formatDuration(ms: number) {
 const PIXELS_PER_MINUTE = 1.2; // 1시간 = 72px
 
 export function Timeline({ date }: { date: string }) {
-  const activities = useStore(state => state.activities);
+  const { activities, dayStartOffset = 0 } = useStore();
   const [selectedBlock, setSelectedBlock] = useState<TimelineBlock | null>(null);
   
   const targetDateObj = new Date(date);
-  const isToday = isSameDay(targetDateObj, new Date());
+  const customStartOfDay = new Date(startOfDay(targetDateObj).getTime() + dayStartOffset * 3600000);
+  const customEndOfDay = new Date(customStartOfDay.getTime() + 86400000);
 
   const [now, setNow] = useState(new Date());
+  
+  const isLogicalToday = now >= customStartOfDay && now < customEndOfDay;
+
   useEffect(() => {
-    if (!isToday) return;
+    if (!isLogicalToday) return;
     const timer = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(timer);
-  }, [isToday]);
+  }, [isLogicalToday]);
 
-  const blocks = useMemo(() => generateTimelineBlocks(activities, targetDateObj), [activities, now, date, targetDateObj]);
+  const blocks = useMemo(() => generateTimelineBlocks(activities, targetDateObj, dayStartOffset), [activities, now, date, targetDateObj, dayStartOffset]);
   
-  const dayStart = startOfDay(targetDateObj);
-  const currentMinutes = isToday ? differenceInMinutes(now, dayStart) : 0;
+  const currentMinutes = isLogicalToday ? differenceInMinutes(now, customStartOfDay) : 0;
   
-  const dayEndObj = isToday ? now : new Date(dayStart.getTime() + 86399999);
+  const limitDate = isLogicalToday ? now : customEndOfDay;
   
   const wasteMs = useMemo(() => {
     return activities
-      .filter(a => a.tag === '낭비' && new Date(a.start_time) >= dayStart && new Date(a.start_time) <= dayEndObj)
+      .filter(a => a.tag === '낭비' && new Date(a.start_time) >= customStartOfDay && new Date(a.start_time) <= limitDate)
       .reduce((sum, a) => {
         const aStart = new Date(a.start_time);
-        const aEnd = a.end_time ? new Date(a.end_time) : dayEndObj;
-        return sum + (Math.min(aEnd.getTime(), dayEndObj.getTime()) - Math.max(aStart.getTime(), dayStart.getTime()));
+        const aEnd = a.end_time ? new Date(a.end_time) : limitDate;
+        return sum + (Math.min(aEnd.getTime(), limitDate.getTime()) - Math.max(aStart.getTime(), customStartOfDay.getTime()));
       }, 0);
-  }, [activities, dayStart, dayEndObj, now]);
+  }, [activities, customStartOfDay, limitDate, now]);
 
-  const totalDayMs = dayEndObj.getTime() - dayStart.getTime();
+  const totalDayMs = limitDate.getTime() - customStartOfDay.getTime();
   const wastePercentage = totalDayMs > 0 ? (wasteMs / Math.max(totalDayMs, 1)) * 100 : 0;
   const isWasteWarning = wastePercentage > 20;
 
@@ -77,23 +80,26 @@ export function Timeline({ date }: { date: string }) {
           <div className="absolute top-0 bottom-0 left-[60px] w-[1px] bg-neutral-100" />
           
           {/* Grid Lines & Hours */}
-          {Array.from({ length: 25 }).map((_, i) => (
-            <div 
-              key={`hour-${i}`} 
-              className="absolute w-full flex items-center pointer-events-none" 
-              style={{ top: `${i * 60 * PIXELS_PER_MINUTE}px` }}
-            >
-               <div className="w-[60px] pr-3 shrink-0 flex justify-end">
-                 <span className="text-[10px] text-neutral-400 font-mono font-medium transform -translate-y-1/2 z-10">
-                   {String(i).padStart(2, '0')}:00
-                 </span>
-               </div>
-               <div className="flex-1 border-t border-neutral-100" />
-            </div>
-          ))}
+          {Array.from({ length: 25 }).map((_, i) => {
+            const h = (i + dayStartOffset) % 24;
+            return (
+              <div 
+                key={`hour-${i}`} 
+                className="absolute w-full flex items-center pointer-events-none" 
+                style={{ top: `${i * 60 * PIXELS_PER_MINUTE}px` }}
+              >
+                 <div className="w-[60px] pr-3 shrink-0 flex justify-end">
+                   <span className="text-[10px] text-neutral-400 font-mono font-medium transform -translate-y-1/2 z-10">
+                     {String(h).padStart(2, '0')}:00
+                   </span>
+                 </div>
+                 <div className="flex-1 border-t border-neutral-100" />
+              </div>
+            );
+          })}
 
           {/* Current Time Indicator */}
-          {isToday && (
+          {isLogicalToday && (
             <div 
               className="absolute w-full z-30 flex items-center pointer-events-none" 
               style={{ top: `${currentMinutes * PIXELS_PER_MINUTE}px` }}
@@ -105,10 +111,9 @@ export function Timeline({ date }: { date: string }) {
             </div>
           )}
 
-          {/* Blocks */}
           <div className="absolute top-0 bottom-0 left-[68px] right-3 lg:right-5">
             {blocks.map(block => {
-              const startMins = Math.max(0, differenceInMinutes(block.start, dayStart));
+              const startMins = Math.max(0, differenceInMinutes(block.start, customStartOfDay));
               const durMins = Math.round(block.durationMs / 60000);
               
               const topPx = startMins * PIXELS_PER_MINUTE;
@@ -122,11 +127,11 @@ export function Timeline({ date }: { date: string }) {
                   <button
                     key={block.id}
                     onClick={() => setSelectedBlock(block)}
-                    disabled={!isToday || durMins < 15}
+                    disabled={!isLogicalToday || durMins < 15}
                     className="absolute w-full rounded-xl bg-neutral-50/50 hover:bg-neutral-100 transition-all border border-dashed border-neutral-300 flex items-center justify-center group overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ top: `${topPx}px`, height: `${heightPx}px` }}
                   >
-                    {isToday && heightPx > 20 && (
+                    {isLogicalToday && heightPx > 20 && (
                       <span className="text-[10px] text-neutral-400 font-bold group-hover:text-neutral-500 transition-colors bg-white/90 px-2 py-0.5 rounded-lg shadow-sm border border-neutral-100">
                         (+ 태그 추가)
                       </span>
@@ -144,8 +149,8 @@ export function Timeline({ date }: { date: string }) {
               return (
                 <div
                   key={block.id}
-                  onClick={(isEditableGreyZone || isRemovable) && isToday ? () => setSelectedBlock(block) : undefined}
-                  className={`absolute w-full rounded-md overflow-hidden flex flex-col justify-center px-3 transition-all border shadow-sm z-20 group ${((isEditableGreyZone || isRemovable) && isToday) ? 'cursor-pointer hover:brightness-95' : ''}`}
+                  onClick={(isEditableGreyZone || isRemovable) && isLogicalToday ? () => setSelectedBlock(block) : undefined}
+                  className={`absolute w-full rounded-md overflow-hidden flex flex-col justify-center px-3 transition-all border shadow-sm z-20 group ${((isEditableGreyZone || isRemovable) && isLogicalToday) ? 'cursor-pointer hover:brightness-95' : ''}`}
                   style={{ 
                     top: `${topPx}px`, 
                     height: `${heightPx}px`,

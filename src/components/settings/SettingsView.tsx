@@ -11,7 +11,7 @@ const COLORS = [
 ];
 
 export function SettingsView() {
-  const { user, categories, tags, goals, targetPeriodSetting, showFloatingTimer, setShowFloatingTimer, addCategory, removeCategory, moveCategory, updateCategoryColor, updateCategoryName, addTag, removeTag, updateTag, addGoal, removeGoal, setTargetPeriodSetting, resetTrackingData, resetAllData } = useStore();
+  const { user, categories, tags, goals, targetPeriodSetting, showFloatingTimer, dayStartOffset, setShowFloatingTimer, setDayStartOffset, addCategory, removeCategory, moveCategory, updateCategoryColor, updateCategoryName, addTag, removeTag, updateTag, addGoal, removeGoal, setTargetPeriodSetting, resetTrackingData, resetAllData } = useStore();
   
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryColor, setNewCategoryColor] = useState(COLORS[0]);
@@ -211,6 +211,22 @@ export function SettingsView() {
               />
               <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
             </label>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-neutral-50 p-4 rounded-xl">
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-darkText">캘린더/타임라인 시작 기준 시간</span>
+              <span className="text-xs text-neutral-500 mt-0.5">자정이 아닌 원하는 시각을 하루의 시작으로 설정합니다 (예: 새벽 4시)</span>
+            </div>
+            <select 
+              value={dayStartOffset || 0}
+              onChange={(e) => setDayStartOffset(Number(e.target.value))}
+              className="bg-white border border-neutral-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-secondary transition-colors"
+            >
+              {[...Array(24)].map((_, i) => (
+                <option key={i} value={i}>{String(i).padStart(2, '0')}:00</option>
+              ))}
+            </select>
           </div>
         </div>
       </section>

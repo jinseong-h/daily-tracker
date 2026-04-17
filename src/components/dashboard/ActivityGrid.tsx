@@ -34,25 +34,54 @@ export function ActivityGrid() {
     }
   };
 
-  const isTagUnderperforming = (tag: any) => {
-    if (!tag.daily_target) return false;
+  const getTagWarnings = (tag: any): ('average' | 'today')[] => {
+    if (!tag.daily_target) return [];
+    
+    const warnings: ('average' | 'today')[] = [];
     const periodDays = targetPeriodSetting || 7;
     const currentNow = new Date();
-    let totalMs = 0;
+    const { dayStartOffset = 0 } = useStore.getState();
     
+    let logicalTodayStart = new Date(currentNow.getFullYear(), currentNow.getMonth(), currentNow.getDate(), dayStartOffset, 0, 0, 0);
+    if (currentNow < logicalTodayStart) {
+      logicalTodayStart = subDays(logicalTodayStart, 1);
+    }
+    
+    const todayActivities = activities.filter(a => {
+      if (a.tag !== tag.name) return false;
+      return new Date(a.start_time) >= logicalTodayStart;
+    });
+    const todayMs = todayActivities.reduce((sum, a) => {
+      const start = new Date(a.start_time).getTime();
+      const end = a.end_time ? new Date(a.end_time).getTime() : currentNow.getTime();
+      return sum + Math.max(0, end - start);
+    }, 0);
+    
+    if (todayMs < tag.daily_target * 3600000) {
+      warnings.push('today');
+    }
+    
+    let totalMs = 0;
     for (let i = periodDays - 1; i >= 0; i--) {
-      const d = subDays(currentNow, i);
-      const dStr = format(d, 'yyyy-MM-dd');
+      const dayRefStart = subDays(logicalTodayStart, i);
+      const dayRefEnd = subDays(logicalTodayStart, i - 1);
       
-      const dayActivities = activities.filter(a => a.tag === tag.name && a.start_time.startsWith(dStr));
-      totalMs += dayActivities.reduce((sum, a) => {
+      const dayActs = activities.filter(a => {
+        const s = new Date(a.start_time);
+        return a.tag === tag.name && s >= dayRefStart && s < dayRefEnd;
+      });
+      totalMs += dayActs.reduce((sum, a) => {
         const start = new Date(a.start_time).getTime();
         const end = a.end_time ? new Date(a.end_time).getTime() : currentNow.getTime();
-        return sum + (Math.max(0, end - start));
+        return sum + Math.max(0, end - start);
       }, 0);
     }
-    const avgHours = (totalMs / 3600000) / periodDays;
-    return avgHours < tag.daily_target;
+    
+    if (totalMs < tag.daily_target * 3600000 * periodDays) {
+      warnings.push('average');
+    }
+    
+    return warnings;
   };
 
   // Format running time for spotlight
@@ -130,7 +159,7 @@ export function ActivityGrid() {
                         category={tag.category}
                         color={cat.color}
                         isRunning={false}
-                        hasWarning={isTagUnderperforming(tag)}
+                        warnings={getTagWarnings(tag)}
                         onClick={() => handleButtonClick(tag.name, tag.category, cat.color)}
                       />
                     );

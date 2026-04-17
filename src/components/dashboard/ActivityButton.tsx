@@ -8,11 +8,11 @@ interface ActivityButtonProps {
   color: string;
   isRunning: boolean;
   startTime?: string | null;
-  hasWarning?: boolean;
+  warnings?: ('average' | 'today')[];
   onClick: () => void;
 }
 
-export function ActivityButton({ tag, category, color, isRunning, startTime, hasWarning, onClick }: ActivityButtonProps) {
+export function ActivityButton({ tag, category, color, isRunning, startTime, warnings = [], onClick }: ActivityButtonProps) {
   const elapsed = useTimer(isRunning ? startTime : null);
 
   return (
@@ -28,9 +28,18 @@ export function ActivityButton({ tag, category, color, isRunning, startTime, has
         borderColor: isRunning ? color : 'transparent',
       }}
     >
-      {hasWarning && !isRunning && (
-        <div className="absolute top-2 right-2 text-red-500 bg-red-50 rounded-full p-1 shadow-sm" title="일 평균 목표 미달">
-          ⚠️
+      {!isRunning && warnings.length > 0 && (
+        <div className="absolute top-0 right-0 flex flex-col items-end gap-[1px] overflow-hidden rounded-bl-xl rounded-tr-2xl">
+          {warnings.includes('average') && (
+            <div className="bg-red-500 text-white font-black text-[10px] px-2.5 py-1 shadow-sm leading-none tracking-tight animate-pulse" title="일 평균 목표 미달">
+              평균미달
+            </div>
+          )}
+          {warnings.includes('today') && (
+            <div className="bg-orange-100 text-orange-600 font-bold text-[9px] px-2 py-0.5 shadow-sm leading-none tracking-tight" title="오늘 목표 미달">
+              당일부족
+            </div>
+          )}
         </div>
       )}
       <div className="flex flex-col items-center gap-3 w-full">
