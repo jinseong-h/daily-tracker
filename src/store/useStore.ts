@@ -43,6 +43,10 @@ interface AppState {
   
   statisticsTimeRange: 'week' | 'month';
   setStatisticsTimeRange: (range: 'week' | 'month') => void;
+
+  showFloatingTimer: boolean;
+  setShowFloatingTimer: (show: boolean) => void;
+  resetTrackingData: () => void;
 }
 
 const DEFAULT_CATEGORIES: CategoryConfig[] = [
@@ -79,9 +83,11 @@ export const useStore = create<AppState>()(
       tags: DEFAULT_TAGS,
       targetPeriodSetting: 7,
       statisticsTimeRange: 'week',
+      showFloatingTimer: true,
 
       setTargetPeriodSetting: (days) => set({ targetPeriodSetting: days }),
       setStatisticsTimeRange: (range) => set({ statisticsTimeRange: range }),
+      setShowFloatingTimer: (show) => set({ showFloatingTimer: show }),
 
       startActivity: (tag, category, color) => {
         const { activities, stopActivity } = get();
@@ -222,6 +228,11 @@ export const useStore = create<AppState>()(
       })),
 
       updateGoals: () => {},
+
+      resetTrackingData: () => set((state) => ({
+        activities: [],
+        journals: []
+      })),
 
       resetAllData: () => set((state) => ({
         activities: [],

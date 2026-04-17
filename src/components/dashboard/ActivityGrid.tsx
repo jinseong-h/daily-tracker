@@ -24,6 +24,13 @@ export function ActivityGrid() {
       stopActivity();
     } else {
       startActivity(tagName, categoryName, color);
+      // Auto-scroll to top when starting a new activity
+      setTimeout(() => {
+        const container = document.getElementById('main-scroll-container');
+        if (container) {
+          container.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }, 100); // Slight delay to let the animation start
     }
   };
 

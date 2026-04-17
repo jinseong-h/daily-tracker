@@ -5,6 +5,7 @@ import { CalendarView } from './components/calendar/CalendarView';
 import { StatisticsView } from './components/statistics/StatisticsView';
 import { SettingsView } from './components/settings/SettingsView';
 import { Navigation } from './components/Navigation';
+import { FloatingTimer } from './components/FloatingTimer';
 import { initSync } from './lib/sync';
 
 initSync();
@@ -40,7 +41,7 @@ function App() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 flex flex-col h-full overflow-y-auto relative bg-background/50">
+        <div id="main-scroll-container" className="flex-1 flex flex-col h-full overflow-y-auto relative bg-background/50 scroll-smooth">
           <header className="pt-12 pb-6 px-6 md:pt-10 md:px-10 sticky top-0 bg-background/90 backdrop-blur-md z-40 border-b border-neutral-200/50 transition-all flex items-center justify-between">
             {activeTab === 'tracker' && (
               <>
@@ -90,6 +91,9 @@ function App() {
             <Navigation activeTab={activeTab} onChange={setActiveTab} />
           </div>
         </div>
+        
+        {/* Floating Timer Widget */}
+        <FloatingTimer activeTab={activeTab} />
       </div>
     </div>
   );

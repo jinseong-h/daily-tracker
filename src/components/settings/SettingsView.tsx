@@ -11,7 +11,7 @@ const COLORS = [
 ];
 
 export function SettingsView() {
-  const { user, categories, tags, goals, targetPeriodSetting, addCategory, removeCategory, moveCategory, updateCategoryColor, updateCategoryName, addTag, removeTag, updateTag, addGoal, removeGoal, setTargetPeriodSetting, resetAllData } = useStore();
+  const { user, categories, tags, goals, targetPeriodSetting, showFloatingTimer, setShowFloatingTimer, addCategory, removeCategory, moveCategory, updateCategoryColor, updateCategoryName, addTag, removeTag, updateTag, addGoal, removeGoal, setTargetPeriodSetting, resetTrackingData, resetAllData } = useStore();
   
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryColor, setNewCategoryColor] = useState(COLORS[0]);
@@ -110,10 +110,18 @@ export function SettingsView() {
   };
 
   const handleResetData = () => {
-    const isConfirmed = window.confirm("경고: 모든 작업 기록, 통계, 목표, 카테고리가 완전히 삭제됩니다.\n초기화하시겠습니까?");
+    const isConfirmed = window.confirm("경고: 모든 작업 기록, 통계, 목표, 카테고리가 완전히 삭제됩니다.\n정말 모든 데이터를 초기화하시겠습니까?");
     if (isConfirmed) {
       resetAllData();
       alert("모든 데이터가 성공적으로 초기화되었습니다.");
+    }
+  };
+
+  const handleResetTrackingData = () => {
+    const isConfirmed = window.confirm("등록해 둔 목표, 작업 항목, 컬러 세팅 등은 그대로 유지한 채\n과거에 측정했던 모든 작업 기록(타임라인)만 삭제합니다.\n진행하시겠습니까?");
+    if (isConfirmed) {
+      resetTrackingData();
+      alert("트래킹 기록이 성공적으로 삭제되었습니다.");
     }
   };
 
@@ -176,16 +184,34 @@ export function SettingsView() {
         <h2 className="text-lg font-bold text-darkText flex items-center gap-2 mb-4">
           <Settings size={18} className="text-primary" /> 기본 설정
         </h2>
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-neutral-50 p-4 rounded-xl">
-          <span className="text-sm font-semibold text-darkText">일 평균 목표 미달 판단 기준</span>
-          <select 
-            value={targetPeriodSetting || 7}
-            onChange={(e) => setTargetPeriodSetting(Number(e.target.value) as 7 | 30)}
-            className="bg-white border border-neutral-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-secondary transition-colors"
-          >
-            <option value={7}>최근 7일 평균</option>
-            <option value={30}>최근 30일 평균</option>
-          </select>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-neutral-50 p-4 rounded-xl">
+            <span className="text-sm font-semibold text-darkText">일 평균 목표 미달 판단 기준</span>
+            <select 
+              value={targetPeriodSetting || 7}
+              onChange={(e) => setTargetPeriodSetting(Number(e.target.value) as 7 | 30)}
+              className="bg-white border border-neutral-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-secondary transition-colors"
+            >
+              <option value={7}>최근 7일 평균</option>
+              <option value={30}>최근 30일 평균</option>
+            </select>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-neutral-50 p-4 rounded-xl">
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-darkText">둥둥 떠다니는 타이머 (플로팅 위젯)</span>
+              <span className="text-xs text-neutral-500 mt-0.5">작업 중일 때 화면 우측 하단에 미니 타이머를 띄웁니다</span>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+              <input 
+                type="checkbox" 
+                className="sr-only peer"
+                checked={showFloatingTimer}
+                onChange={(e) => setShowFloatingTimer(e.target.checked)}
+              />
+              <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </label>
+          </div>
         </div>
       </section>
 
@@ -460,13 +486,21 @@ export function SettingsView() {
         
         <div className="mt-8 pt-6 border-t border-red-100">
           <h3 className="text-sm font-bold text-red-500 mb-2">위험 구역</h3>
-          <p className="text-xs text-neutral-500 mb-4">현재 기기에 저장된 모든 라이프 트래커 데이터를 삭제하며 텅 빈 상태로 되돌립니다. 복구할 수 없습니다.</p>
-          <button 
-            onClick={handleResetData}
-            className="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-3 rounded-xl transition-colors border border-red-200"
-          >
-            모든 데이터 초기화
-          </button>
+          <p className="text-xs text-neutral-500 mb-4">앱의 데이터를 초기화합니다. 작업 방식(모든 정보 삭제 / 기록만 삭제)을 선택하세요.</p>
+          <div className="flex flex-col gap-3">
+            <button 
+              onClick={handleResetTrackingData}
+              className="w-full bg-orange-50 hover:bg-orange-100 text-orange-600 font-bold py-3 rounded-xl transition-colors border border-orange-200"
+            >
+              트래킹 기록만 삭제 (목표/태그 유지)
+            </button>
+            <button 
+              onClick={handleResetData}
+              className="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-3 rounded-xl transition-colors border border-red-200"
+            >
+              모든 데이터 초기화 (완전 삭제)
+            </button>
+          </div>
         </div>
       </section>
       

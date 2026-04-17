@@ -138,13 +138,14 @@ export function Timeline({ date }: { date: string }) {
               const durStr = formatDuration(block.durationMs);
               const isTiny = heightPx < 25;
 
-              const isEditable = block.activity?.tag === '휴식' || block.activity?.tag === '낭비';
+              const isEditableGreyZone = block.activity?.tag === '휴식' || block.activity?.tag === '낭비' || !block.activity;
+              const isRemovable = !!block.activity;
 
               return (
                 <div
                   key={block.id}
-                  onClick={isEditable && isToday ? () => setSelectedBlock(block) : undefined}
-                  className={`absolute w-full rounded-md overflow-hidden flex flex-col justify-center px-3 transition-all border shadow-sm z-20 group ${isEditable && isToday ? 'cursor-pointer hover:brightness-95' : ''}`}
+                  onClick={(isEditableGreyZone || isRemovable) && isToday ? () => setSelectedBlock(block) : undefined}
+                  className={`absolute w-full rounded-md overflow-hidden flex flex-col justify-center px-3 transition-all border shadow-sm z-20 group ${((isEditableGreyZone || isRemovable) && isToday) ? 'cursor-pointer hover:brightness-95' : ''}`}
                   style={{ 
                     top: `${topPx}px`, 
                     height: `${heightPx}px`,
