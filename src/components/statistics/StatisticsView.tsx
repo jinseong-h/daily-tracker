@@ -180,28 +180,7 @@ export function StatisticsView() {
     return days;
   }, [activities, categories, tags]);
 
-  const [overallTotal, monthTotal, yearTotal] = useMemo(() => {
-    const now = new Date();
-    const startM = startOfMonth(now).getTime();
-    const startY = startOfYear(now).getTime();
-    
-    let total = 0, month = 0, year = 0;
-    
-    activities.forEach(a => {
-      const s = new Date(a.start_time).getTime();
-      const e = a.end_time ? new Date(a.end_time).getTime() : now.getTime();
-      const ms = Math.max(0, e - s);
-      total += ms;
-      if (s >= startM) month += ms;
-      if (s >= startY) year += ms;
-    });
-    
-    return [
-      (total / 3600000).toFixed(1),
-      (month / 3600000).toFixed(1),
-      (year / 3600000).toFixed(1),
-    ];
-  }, [activities]);
+
 
   const goalsWithProgress = useMemo(() => {
     const today = new Date();
@@ -378,21 +357,6 @@ export function StatisticsView() {
         
         {/* Left Column */}
         <div className="flex flex-col gap-6 lg:w-[35%] shrink-0">
-          {/* Overview Stats */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="flat-card p-4 flex flex-col items-center justify-center text-center">
-              <span className="text-[10px] text-neutral-400 font-bold mb-1">이번 달</span>
-              <span className="text-lg font-bold text-darkText">{monthTotal}<span className="text-xs text-neutral-500 font-normal ml-0.5">h</span></span>
-            </div>
-            <div className="flat-card p-4 flex flex-col items-center justify-center text-center">
-              <span className="text-[10px] text-neutral-400 font-bold mb-1">올해 전체</span>
-              <span className="text-lg font-bold text-darkText">{yearTotal}<span className="text-xs text-neutral-500 font-normal ml-0.5">h</span></span>
-            </div>
-            <div className="flat-card p-4 flex flex-col items-center justify-center text-center border-primary/20 bg-primary/5">
-              <span className="text-[10px] text-primary font-bold mb-1">누적 총합</span>
-              <span className="text-lg font-bold text-primary">{overallTotal}<span className="text-xs opacity-70 font-normal ml-0.5">h</span></span>
-            </div>
-          </div>
 
           {/* Goal & Badges */}
           <div className="flat-card p-5">

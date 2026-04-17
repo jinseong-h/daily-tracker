@@ -29,6 +29,7 @@ interface AppState {
   removeCategory: (name: string) => void;
   moveCategory: (index: number, direction: 'up' | 'down') => void;
   updateCategoryColor: (name: string, color: string) => void;
+  updateCategoryName: (oldName: string, newName: string) => void;
   addTag: (tag: TagConfig) => void;
   removeTag: (name: string, category: string) => void;
   updateTag: (name: string, category: string, data: Partial<TagConfig>) => void;
@@ -186,6 +187,15 @@ export const useStore = create<AppState>()(
       updateCategoryColor: (name, color) => set((state) => ({
         categories: state.categories.map(c => c.name === name ? { ...c, color } : c)
       })),
+
+      updateCategoryName: (oldName, newName) => set((state) => {
+        if (!newName || state.categories.some(c => c.name === newName)) return state;
+        return {
+          categories: state.categories.map(c => c.name === oldName ? { ...c, name: newName } : c),
+          tags: state.tags.map(t => t.category === oldName ? { ...t, category: newName } : t),
+          activities: state.activities.map(a => a.category === oldName ? { ...a, category: newName } : a)
+        };
+      }),
 
       addTag: (tag) => set((state) => ({
         tags: [...state.tags, tag]

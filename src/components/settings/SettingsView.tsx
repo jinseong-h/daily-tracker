@@ -11,7 +11,7 @@ const COLORS = [
 ];
 
 export function SettingsView() {
-  const { user, categories, tags, goals, targetPeriodSetting, addCategory, removeCategory, moveCategory, updateCategoryColor, addTag, removeTag, updateTag, addGoal, removeGoal, setTargetPeriodSetting, resetAllData } = useStore();
+  const { user, categories, tags, goals, targetPeriodSetting, addCategory, removeCategory, moveCategory, updateCategoryColor, updateCategoryName, addTag, removeTag, updateTag, addGoal, removeGoal, setTargetPeriodSetting, resetAllData } = useStore();
   
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryColor, setNewCategoryColor] = useState(COLORS[0]);
@@ -211,7 +211,22 @@ export function SettingsView() {
                     className="opacity-0 absolute inset-0 w-10 h-10 -translate-x-2 -translate-y-2 cursor-pointer" 
                   />
                 </label>
-                <span className="font-semibold text-darkText text-sm">{cat.name}</span>
+                <input 
+                  type="text"
+                  defaultValue={cat.name}
+                  onBlur={(e) => {
+                    const newName = e.target.value.trim();
+                    if (newName && newName !== cat.name) {
+                      updateCategoryName(cat.name, newName);
+                    } else {
+                      e.target.value = cat.name;
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') e.currentTarget.blur();
+                  }}
+                  className="font-semibold text-darkText text-sm bg-transparent border-b border-transparent hover:border-neutral-200 focus:border-primary outline-none px-1 w-24"
+                />
               </div>
               <div className="flex items-center gap-1">
                 <button 
