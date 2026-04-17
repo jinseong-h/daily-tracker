@@ -32,8 +32,8 @@ function App() {
         {/* Desktop Sidebar */}
         <div className="hidden md:flex w-64 lg:w-72 bg-white border-r border-neutral-200 flex-col pt-10 pb-6 z-50 shrink-0 h-full overflow-y-auto">
           <div className="px-8 mb-10 w-full flex flex-col items-center justify-center">
-            <div className="w-14 h-14 bg-gradient-to-br from-primary to-secondary text-white rounded-2xl flex items-center justify-center font-black text-2xl mb-4 shadow-lg drop-shadow">D</div>
-            <h1 className="text-xl font-bold tracking-tight text-darkText">Daily Tracker</h1>
+            <div className="w-14 h-14 bg-gradient-to-br from-primary to-secondary text-white rounded-2xl flex items-center justify-center font-black text-2xl mb-4 shadow-lg drop-shadow">V</div>
+            <h1 className="text-xl font-bold tracking-tight text-darkText">Vivatly</h1>
             <p className="text-xs text-neutral-400 mt-1">나의 일상을 기록하다</p>
           </div>
           <Navigation vertical activeTab={activeTab} onChange={setActiveTab} />
